@@ -1,0 +1,124 @@
+<style>
+    body {
+        margin: 30px;
+    }
+    table {
+        margin-top: 30px;
+        border-collapse: collapse;
+    }
+    td {
+        border: solid 1px;
+        width: 40px;
+        height: 40px;
+        text-align: center;
+    }
+    input {
+        margin-top: 30px;
+    }
+</style>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>◯✕ゲーム</title>
+</head>
+<body>
+    <h3>◯✕ゲーム</h3>
+    <div class="announce">◯のターン</div>
+    <table class="tbl"></table>
+    <input type="button" value="ゲーム初期化" onclick="gameClear()" />
+</body>
+
+<script>
+    // TODO: マスを動的にして、n目並べにする
+    cell = 3;
+    maru = "◯";
+    batsu = "✕";
+    endGame = "ゲーム終了";
+    maruTurn = `${maru}のターン`;
+    batsuTurn = `${batsu}のターン`;
+    maruWin = `${maru}の勝ち！`;
+    batsuWin = `${batsu}の勝ち！`;
+    maruNode = document.createTextNode(maru);
+    batsuNode = document.createTextNode(batsu);
+    count = 0;
+
+    tbl = document.querySelector(".tbl");
+    announce = document.querySelector(".announce");
+    startButton = document.querySelector(".start_button");
+
+    const gameStart = (e) => {
+        if (
+            announce.innerText === endGame ||
+            announce.innerText === maruWin ||
+            announce.innerText === batsuWin ||
+            e.target.innerText.length
+        ) {
+            return;
+        }
+        count += 1;
+        even = count % 2 === 0;
+        announce.innerText = even ? maruTurn : batsuTurn;
+        e.target.innerText = even ? batsu : maru;
+        if (resultCheck(even)) {
+            announce.innerText = even ? batsuWin : maruWin;
+            return;
+        }
+        if (count >= cell ** 2) announce.innerText = "引き分け";
+    };
+
+    const init = () => {
+        for (i = 0; i < cell; i++) {
+            tr = document.createElement("tr");
+            tbl.appendChild(tr);
+            tr.setAttribute("class", `tr_${i}`);
+            for (j = 0; j < cell; j++) {
+                td = document.createElement("td");
+                c = `td_${i}_${j}`;
+                tr.appendChild(td);
+                td.setAttribute("class", c);
+                td.setAttribute("data-target", c);
+                td.onclick = gameStart;
+            }
+        }
+    };
+    init();
+
+    td_0_0 = document.querySelector(".td_0_0");
+    td_0_1 = document.querySelector(".td_0_1");
+    td_0_2 = document.querySelector(".td_0_2");
+    td_1_0 = document.querySelector(".td_1_0");
+    td_1_1 = document.querySelector(".td_1_1");
+    td_1_2 = document.querySelector(".td_1_2");
+    td_2_0 = document.querySelector(".td_2_0");
+    td_2_1 = document.querySelector(".td_2_1");
+    td_2_2 = document.querySelector(".td_2_2");
+
+    // TODO: 置いたところから、上下左右のnマスの並びをチェックするロジックにすると、パターンを考慮しなくて良さそう
+    winningPattern = [
+        [td_0_0, td_0_1, td_0_2],
+        [td_1_0, td_1_1, td_1_2],
+        [td_2_0, td_2_1, td_2_2],
+        [td_0_0, td_1_0, td_2_0],
+        [td_0_1, td_1_1, td_2_1],
+        [td_0_2, td_1_2, td_2_2],
+        [td_0_0, td_1_1, td_2_2],
+        [td_0_2, td_1_1, td_2_0],
+    ];
+
+    const resultCheck = (even) => {
+        check = even ? batsu : maru;
+        return winningPattern.some((td) => {
+            td0 = td[0].innerText;
+            td1 = td[1].innerText;
+            td2 = td[2].innerText;
+            if (td0 === check && td1 === check && td2 === check) return true;
+        });
+    };
+
+    const gameClear = () => {
+        document.querySelectorAll("td").forEach((td) => (td.innerText = ""));
+        announce.innerText = maruTurn;
+        count = 0;
+    };
+</script>
