@@ -42,7 +42,6 @@
     maruNode = document.createTextNode(maru);
     batsuNode = document.createTextNode(batsu);
     count = 0;
-
     tbl = document.querySelector(".tbl");
     announce = document.querySelector(".announce");
     startButton = document.querySelector(".start_button");
@@ -74,25 +73,16 @@
             tr.setAttribute("class", `tr_${i}`);
             for (j = 0; j < cell; j++) {
                 td = document.createElement("td");
-                c = `td_${i}_${j}`;
+                key = `td_${i}_${j}`;
                 tr.appendChild(td);
-                td.setAttribute("class", c);
-                td.setAttribute("data-target", c);
+                td.setAttribute("class", key);
+                td.setAttribute("data-target", key);
+                eval(`${key} = document.querySelector(".${key}");`);
                 td.onclick = gameStart;
             }
         }
     };
     init();
-
-    td_0_0 = document.querySelector(".td_0_0");
-    td_0_1 = document.querySelector(".td_0_1");
-    td_0_2 = document.querySelector(".td_0_2");
-    td_1_0 = document.querySelector(".td_1_0");
-    td_1_1 = document.querySelector(".td_1_1");
-    td_1_2 = document.querySelector(".td_1_2");
-    td_2_0 = document.querySelector(".td_2_0");
-    td_2_1 = document.querySelector(".td_2_1");
-    td_2_2 = document.querySelector(".td_2_2");
 
     // TODO: 置いたところから、上下左右のnマスの並びをチェックするロジックにすると、パターンを考慮しなくて良さそう
     winningPattern = [
@@ -109,10 +99,11 @@
     const resultCheck = (even) => {
         check = even ? batsu : maru;
         return winningPattern.some((td) => {
-            td0 = td[0].innerText;
-            td1 = td[1].innerText;
-            td2 = td[2].innerText;
-            if (td0 === check && td1 === check && td2 === check) return true;
+            return (
+                td[0].innerText === check &&
+                td[1].innerText === check &&
+                td[2].innerText === check
+            );
         });
     };
 
