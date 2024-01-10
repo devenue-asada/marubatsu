@@ -3,7 +3,6 @@
         margin: 30px;
     }
     table {
-        margin-top: 30px;
         border-collapse: collapse;
     }
     td {
@@ -23,24 +22,70 @@
     <title>◯✕ゲーム</title>
 </head>
 <body>
-    <h3>◯✕ゲーム</h3>
+    <p class="info"></p>
+    <div>
+        <select class="select-cell" onchange="changeCell()"></select
+        >マス
+        <select class="select-piece" onchange="changePiece()"></select
+        >目
+    </div>
     <div class="announce">◯のターン</div>
     <table class="tbl"></table>
     <input type="button" value="ゲーム初期化" onclick="gameClear()" />
 </body>
 
 <script>
-    // TODO: マスを動的にして、n目並べにする
     cell = 3;
-    maru = "◯";
-    batsu = "✕";
+    cells = [];
+    piece = 3;
+    pieces = [];
+    max = 10;
+    maxes = [];
+
+    for (i = cell; i < cell + 50; i++) {
+        cells.push(i);
+        pieces.push(i);
+    }
+
+    sc = document.querySelector(".select-cell");
+    for (let cell in cells) {
+        let op = document.createElement("option");
+        op.text = cells[cell];
+        sc.appendChild(op);
+    }
+    const changeCell = () => {
+        cell = sc.value;
+        if (cell < piece) {
+            piece = cell;
+            sp.value = cell;
+        }
+        init();
+    };
+
+    sp = document.querySelector(".select-piece");
+    for (let piece in pieces) {
+        let op = document.createElement("option");
+        op.text = pieces[piece];
+        sp.appendChild(op);
+    }
+    const changePiece = () => {
+        piece = sp.value;
+        if (cell < piece) {
+            cell = piece;
+            sc.value = piece;
+        }
+        init();
+    };
+
+    tick = "◯";
+    cross = "✕";
     endGame = "ゲーム終了";
-    maruTurn = `${maru}のターン`;
-    batsuTurn = `${batsu}のターン`;
-    maruWin = `${maru}の勝ち！`;
-    batsuWin = `${batsu}の勝ち！`;
-    maruNode = document.createTextNode(maru);
-    batsuNode = document.createTextNode(batsu);
+    tickTurn = `${tick}のターン`;
+    crossTurn = `${cross}のターン`;
+    tickWin = `${tick}の勝ち！`;
+    crossWin = `${cross}の勝ち！`;
+    tickNode = document.createTextNode(tick);
+    crossNode = document.createTextNode(cross);
     count = 0;
     tbl = document.querySelector(".tbl");
     announce = document.querySelector(".announce");
@@ -49,24 +94,28 @@
     const gameStart = (e) => {
         if (
             announce.innerText === endGame ||
-            announce.innerText === maruWin ||
-            announce.innerText === batsuWin ||
+            announce.innerText === tickWin ||
+            announce.innerText === crossWin ||
             e.target.innerText.length
         ) {
             return;
         }
         count += 1;
         even = count % 2 === 0;
-        announce.innerText = even ? maruTurn : batsuTurn;
-        e.target.innerText = even ? batsu : maru;
-        if (resultCheck(even)) {
-            announce.innerText = even ? batsuWin : maruWin;
+
+        announce.innerText = even ? tickTurn : crossTurn;
+        e.target.innerText = even ? cross : tick;
+        if (winningCheck(even, e.target.getAttribute("data-target"))) {
+            announce.innerText = even ? crossWin : tickWin;
             return;
         }
         if (count >= cell ** 2) announce.innerText = "引き分け";
     };
 
     const init = () => {
+        document.querySelector(".info").innerText = `${cell}マス${piece}目並べ`;
+        while (tbl.firstChild) tbl.removeChild(tbl.firstChild);
+
         for (i = 0; i < cell; i++) {
             tr = document.createElement("tr");
             tbl.appendChild(tr);
@@ -84,32 +133,101 @@
     };
     init();
 
-    // TODO: 置いたところから、上下左右のnマスの並びをチェックするロジックにすると、パターンを考慮しなくて良さそう
-    winningPattern = [
-        [td_0_0, td_0_1, td_0_2],
-        [td_1_0, td_1_1, td_1_2],
-        [td_2_0, td_2_1, td_2_2],
-        [td_0_0, td_1_0, td_2_0],
-        [td_0_1, td_1_1, td_2_1],
-        [td_0_2, td_1_2, td_2_2],
-        [td_0_0, td_1_1, td_2_2],
-        [td_0_2, td_1_1, td_2_0],
-    ];
+    const getMark = (row, column) => {
+        return document.querySelector(`.td_${row}_${column}`)?.innerText;
+    };
 
-    const resultCheck = (even) => {
-        check = even ? batsu : maru;
-        return winningPattern.some((td) => {
-            return (
-                td[0].innerText === check &&
-                td[1].innerText === check &&
-                td[2].innerText === check
+    const connections = (
+        axis,
+        mark,
+        row,
+        column,
+        connectCount,
+        count,
+        rightCheck,
+        rightEnd,
+        leftEnd
+    ) => {
+        count += 1;
+        checkCount = piece * 2 - 2;
+
+        if (rightEnd && leftEnd) return connectCount;
+
+        if (rightCheck) {
+            targetRow = axis === "X" ? row : row + count;
+            targetColumn =
+                axis === "Y"
+                    ? column
+                    : axis === "y"
+                    ? column - count
+                    : column + count;
+
+            return connections(
+                axis,
+                mark,
+                targetRow,
+                targetColumn,
+                mark === getMark(targetRow, targetColumn)
+                    ? (connectCount += 1)
+                    : connectCount,
+                count,
+                false,
+                count > checkCount
+                    ? true
+                    : mark !== getMark(targetRow, targetColumn),
+                count <= 1 ? false : leftEnd
             );
-        });
+        } else {
+            targetRow = axis === "X" ? row : row - count;
+            targetColumn =
+                axis === "Y"
+                    ? column
+                    : axis === "y"
+                    ? column + count
+                    : column - count;
+
+            return connections(
+                axis,
+                mark,
+                targetRow,
+                targetColumn,
+                mark === getMark(targetRow, targetColumn)
+                    ? (connectCount += 1)
+                    : connectCount,
+                count,
+                true,
+                rightEnd,
+                count > checkCount
+                    ? true
+                    : mark !== getMark(targetRow, targetColumn)
+            );
+        }
+    };
+
+    const winningCheck = (even, target) => {
+        mark = even ? cross : tick;
+        [_, row, column] = target.split("_");
+        row = Number(row);
+        column = Number(column);
+        // X
+        XPieces = connections("X", mark, row, column, 1, 0, true, false, false);
+        // Y
+        YPieces = connections("Y", mark, row, column, 1, 0, true, false, false);
+        // x ＼
+        xPieces = connections("x", mark, row, column, 1, 0, true, false, false);
+        // y ／
+        yPieces = connections("y", mark, row, column, 1, 0, true, false, false);
+        return (
+            XPieces >= piece ||
+            YPieces >= piece ||
+            xPieces >= piece ||
+            yPieces >= piece
+        );
     };
 
     const gameClear = () => {
         document.querySelectorAll("td").forEach((td) => (td.innerText = ""));
-        announce.innerText = maruTurn;
+        announce.innerText = tickTurn;
         count = 0;
     };
 </script>
