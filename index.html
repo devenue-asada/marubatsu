@@ -54,7 +54,7 @@
         sc.appendChild(op);
     }
     const changeCell = () => {
-        cell = sc.value;
+        cell = Number(sc.value);
         if (cell < piece) {
             piece = cell;
             sp.value = cell;
@@ -69,7 +69,7 @@
         sp.appendChild(op);
     }
     const changePiece = () => {
-        piece = sp.value;
+        piece = Number(sp.value);
         if (cell < piece) {
             cell = piece;
             sc.value = piece;
